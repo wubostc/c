@@ -1,3 +1,6 @@
+/**
+ * tcp & udp 双重监听
+ */
 #include <errno.h>
 #include <signal.h>
 #include <sys/socket.h>
@@ -11,7 +14,7 @@
 #define MAXLINE 10
 
 void sig_child(int sig) {
-  printf("sig: %d", sig);
+  printf("childsig: %d\n", sig);
   return;
 }
 
@@ -35,7 +38,8 @@ int main() {
   const int on = 1;
   setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
   res = bind(listenfd, (const struct sockaddr *)&servaddr, sizeof(servaddr));
-  printf("%d\n", res);
+  printf("38: %d\n", res);
+  listen(listenfd, 100);
 
 
   /* udp socket */
@@ -44,8 +48,8 @@ int main() {
   servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
   servaddr.sin_port = htons(9999); // same as tcp
   servaddr.sin_family = AF_INET;
-  bind(udpfd, (const struct sockaddr *)&servaddr, sizeof(servaddr));
-  printf("%d\n", res);
+  res = bind(udpfd, (const struct sockaddr *)&servaddr, sizeof(servaddr));
+  printf("48: %d\n", res);
 
 
   signal(SIGCHLD, sig_child);
@@ -56,6 +60,8 @@ int main() {
   maxfdp1 += 1;
   
   while(1){
+   
+    // every time you set
     FD_SET(listenfd, &rset);
     FD_SET(udpfd, &rset);
 
@@ -77,13 +83,17 @@ int main() {
     }
 
     if(FD_ISSET(listenfd, &rset)) {
+      puts("listenfd");
       len = sizeof(chiaddr);
       connfd = accept(listenfd, (struct sockaddr *)&chiaddr, &len);
 
       if((childpid = fork()) == 0) {
+        printf("connfd: %d\n", connfd);
+        n = read(connfd, mesg, MAXLINE);
+        mesg[n] = 0;
+        write(connfd, mesg, strlen(mesg));
+        close(connfd);
         close(listenfd); // ref: listenfd - 1
-        printf("connfd: %d", connfd);
-        close(connfd); // ref: connfd - 1
         exit(0); // exits to child process
       }
 
@@ -91,6 +101,7 @@ int main() {
     }
 
     if(FD_ISSET(udpfd, &rset)) {
+      puts("udpfd");
       len = sizeof(chiaddr);
       n = recvfrom(udpfd, mesg, MAXLINE, 0, (struct sockaddr *)&chiaddr, &len);
       mesg[n] = 0;
