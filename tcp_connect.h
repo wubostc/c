@@ -2,6 +2,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 int tcp_connect(const char *host, const char *serv) {
   int sockfd, n;
   struct addrinfo hints, *res, *ressave;
