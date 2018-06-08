@@ -8,4 +8,10 @@
 * 使用getaddrinfo获取对端地址信息列表，getpeername获取对端的地址信息 
 
 ### 11-13
-* getaddrinfo获取本地地址信息列表，对每个连接的客户端回显服务端时间
+* getaddrinfo获取本地地址信息列表，对每个tcpclient显服务端时间
+
+### 11-14
+* udpclient 指定ip和端口获取服务端时间
+
+### 11-19
+* udpserver协议无关时间获取服务器程序
